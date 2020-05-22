@@ -1,0 +1,14 @@
+{% extends 'app/paper/base.html' %}
+{% block content %}
+
+   <div class="card" style="width: 18rem; ">
+   <div class="card-header text-center" style="background-color: gray; color: white;">
+    Car info
+   </div>
+      <ul class="list-group list-group-flush">
+          {% for k, i in car.items %}
+              <li class="list-group-item"><strong>{{ k }}</strong> : {{ i }}</li>
+          {% endfor %}
+      </ul>
+   </div>
+{% endblock %}

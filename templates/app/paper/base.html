@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css'%}">
+    <link rel="stylesheet" href="{% static 'css/base.css'%}">
+    <link rel="stylesheet" href="{% static 'css/font_awesome.css' %}">
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="row" style="justify-content: center; justify-items: center">
+                <div class="col-lg-1"></div>
+                <div class="col-lg-5">(044)290-19-88</div>
+                <div class="col-lg-4">
+                    <ul class="sci">
+                        <li><a href="#" class="fa fa-facebook"></a></li>
+                        <li><a href="#" class="fa fa-instagram"></a></li>
+                        <li><a href="#" class="fa fa-youtube"></a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2"><a href="#" class="fa fa-search" id="search"></a></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <ul class="nav justify-content-center">
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'get_token' %}">Token</a>
+          </li>
+            {{ request.GET.token }}
+          {% block nav_item %}
+          {% endblock %}
+
+        </ul>
+    </div>
+
+    <div class="container" style="margin-bottom: 10px">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert-success text-center">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    </div>
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3">
+                    <p class="cpryt">&copy; Copyright 2020</p>
+                </div>
+                <div class="col-lg-3"><strong>Info1</strong><br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+                <div class="col-lg-3"><strong>Info2</strong><br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. .</div>
+                <div class="col-lg-2"><strong>Info3</strong><br>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. .</div>
+                <div class="col-lg-1">
+                    <ul class="sci">
+                        <li><a href="#" class="fa fa-facebook"></a></li>
+                        <li><a href="#" class="fa fa-instagram"></a></li>
+                        <li><a href="#" class="fa fa-youtube"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+<script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+</body>
+</html>
