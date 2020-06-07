@@ -3,7 +3,7 @@ from functools import wraps
 from django.shortcuts import render
 import requests
 from datetime import datetime
-from .forms import TokenRetrieveForm
+from .forms import TokenRetrieveForm, SearchForm
 from django.contrib import messages
 from django.shortcuts import reverse, redirect
 from .models import Person
@@ -13,7 +13,8 @@ from .models import Person
 def token_exp(something):
     @wraps(something)
     def wrap(*args, **kwargs):
-        req = args[1]
+
+        req = args[0]
         if datetime.now().timestamp() > req.session['expires_in']:
             print(f"current time: {datetime.now().timestamp()}, token time : {req.session['expires_in']}")
             return redirect(token_exp)
@@ -35,16 +36,27 @@ def get_token(request):
             client_id = form.cleaned_data['client_id']
             client_secret = form.cleaned_data['client_secret']
 
-            token = requests.post('http://mainapi.hsc.gov.ua/auth-server/oauth/token', data=dat,
+            try:
+                token = requests.post('http://mainapi.hsc.gov.ua/auth-server/oauth/token', data=dat,
                                   auth=(client_id, client_secret)).json()
+            except Exception as e:
+                print(e)
+                messages.warning(request, 'Пароль пароль або логін невірний.')
+                return redirect(get_token)
 
-            request.session['token'] = 'Bearer ' + token['access_token']
-            request.session['expires_in'] = token['expires_in'] + datetime.now().timestamp()
+            try:
+                request.session['token'] = 'Bearer ' + token['access_token']
+                request.session['expires_in'] = token['expires_in'] + datetime.now().timestamp()
+            except KeyError as err:
+                messages.warning(request, 'Пароль пароль або логін невірний.')
+                return redirect(get_token)
 
-            messages.success(request, 'Success! Now you have a permission to get your paper. Use links under to do it.')
-            person, created = Person.objects.get_or_create(username=dat['username'], clntId=client_id)
+            except IndexError as err:
+                messages.warning(request, 'Пароль пароль або логін невірний.')
+                return redirect(get_token)
 
-            return redirect(reverse('get_paper', kwargs={'paper_pk': person.paper_id}))
+            messages.success(request, 'Доступ до пошуку дозволений.')
+            return redirect(search_doc)
 
     else:
         form = TokenRetrieveForm()
@@ -52,71 +64,39 @@ def get_token(request):
     return render(request, 'app/paper/token_retrieve.html', {'form': form})
 
 
+@token_exp
+def search_doc(request):
+    if request.method == 'POST':
+        header = {'Authorization': request.session['token']}
 
-def get_paper(request, paper_pk):
+        form = SearchForm(request.POST)
 
-    header = {'Authorization': request.session['token']}
+        if form.is_valid():
 
-    paper = requests.get(f'http://mainapi.hsc.gov.ua/tst-sprlics-service/sprlics/{paper_pk}', headers=header).json()
+            seria = form.cleaned_data['seria']
+            number = form.cleaned_data['number']
 
-    request.session['clntId'] = paper[0]['clntId']
-    request.session['carId'] = paper[0]['carId']
-    request.session['licencePlate'] = paper[0]['licencePlate']
-    request.session['vin'] = paper[0]['vin']
-    request.session['seria'] = paper[0]['seria']
-    request.session['number'] = paper[0]['number']
+            doc = requests.get(f"http://mainapi.hsc.gov.ua/test-service/document/med?seria={seria}&number={number}",
+                               headers=header).json()
+            try:
+                context = {'doc_type': doc['body'][0]['typeDoc']['typeDoc'],
+                'doc_type_id': doc['body'][0]['typeDoc']['typeDocId'],
+                'doc_status': doc['body'][0]['typeDoc']['status'],
+                'doc_seria': doc['body'][0]['seria'],
+                'doc_number': doc['body'][0]['number'],
+                'doc_date': doc['body'][0]['docDate'],
+                'doc_end_date': doc['body'][0]['endDate'],
+                'doc_is_real': doc['body'][0]['is_real'],
+                'doc_hwo_out': doc['body'][0]['hwo_out'],
+                'True': True
+             }
+            except IndexError as err:
+                print(err)
+                return render(request, 'app/paper/fail_search.html', {'True': True})
 
-    context = {'paper': paper[0], 'clntId_con': paper[0]['clntId'],
-               'carId_con': paper[0]['carId'], 'vin_con': paper[0]['vin']}
+            return render(request, 'app/paper/document.html', context=context)
+    else:
+        form = SearchForm()
 
-    return render(request, 'app/paper/paper.html', context)
-
-
-def get_person(request, cltId):
-
-    header = {'Authorization': request.session['token']}
-    person = requests.get(f"http://mainapi.hsc.gov.ua/tst-sprlics-service/sprlics/person/{cltId}",
-                            headers=header).json()
-
-    context = {'person': person[0]}
-
-    return render(request, 'app/paper/person.html', context)
-
-
-def get_car(request, carId):
-
-    header = {'Authorization': request.session['token']}
-
-    car = requests.get(f"http://mainapi.hsc.gov.ua/tst-sprlics-service/sprlics/car/{carId}",
-                       headers=header).json()
-    return render(request, 'app/paper/car.html', {'car': car})
-
-
-def get_car_licence(request):
-
-    header = {'Authorization': request.session['token']}
-    param = {'licencePlate': request.session['licencePlate']}
-    cars = requests.get(f"http://mainapi.hsc.gov.ua/tst-sprlics-service/sprlics/car",
-                       headers=header, params=param).json()
-
-    return render(request, 'app/paper/car_licence.html', {'cars': cars})
-
-
-def get_sprlics(request):
-
-    header = {'Authorization': request.session['token']}
-    param = {'seria': request.session['seria'], 'number': request.session['number']}
-    sprlics = requests.get('http://mainapi.hsc.gov.ua/tst-sprlics-service/sprlics',
-                           headers=header, params=param).json()
-
-    return render(request, 'app/paper/sprlics.html', {'sprlics': sprlics[0]})
-
-
-def get_vin(request, vin_number):
-
-    header = {'Authorization': request.session['token']}
-    get_vin = requests.get(f"http://mainapi.hsc.gov.ua/tst-sprlics-service/sprlics/vin/{vin_number}",
-                           headers=header).json()
-
-    return render(request, 'app/paper/vin.html', {'vin': get_vin})
+    return render(request, 'app/paper/doc_search.html', {'form': form})
 

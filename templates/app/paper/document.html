@@ -1,0 +1,23 @@
+{% extends 'app/paper/base.html' %}
+{% block link %}
+    <li class="nav-item">
+       <a class="nav-link" href="{% url 'search' %}">Повернутись до пошуку</a>
+    </li>
+{% endblock %}
+{% block content %}
+    <div class="card" style="width: 18rem;">
+        <div class="card-header">
+        {{ doc_type }}
+        </div>
+      <ul class="list-group list-group-flush">
+          <li class="list-group-item"><strong>Id: </strong>{{ doc_type_id }}</li>
+          <li class="list-group-item"><strong>Сатус: </strong>{{ doc_status }}</li>
+          <li class="list-group-item"><strong>Серія: </strong>{{ doc_seria }}</li>
+          <li class="list-group-item"><strong>Номер: </strong>{{ doc_number }}</li>
+          <li class="list-group-item"><strong>Дата: </strong>{{ doc_date }}</li>
+          <li class="list-group-item"><strong>Дата закінчення терміну: </strong>{{ doc_end_date }}</li>
+          <li class="list-group-item"><strong>Дійсний: </strong>{{ doc_is_real }}</li>
+          <li class="list-group-item"><strong>Ким виданий: </strong>{{ doc_hwo_out }}</li>
+      </ul>
+    </div>
+{% endblock %}

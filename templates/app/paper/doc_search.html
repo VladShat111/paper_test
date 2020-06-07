@@ -1,0 +1,15 @@
+{% extends 'app/paper/base.html' %}
+{% block content %}
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="seria">Серія</label>
+        {{ form.seria }}
+      </div>
+      <div class="form-group">
+        <label for="username">Номер</label>
+        {{ form.number }}
+      </div>
+      <button type="submit" class="btn btn-primary">Пошук</button>
+    </form>
+{% endblock %}

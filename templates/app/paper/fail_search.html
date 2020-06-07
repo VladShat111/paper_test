@@ -1,0 +1,9 @@
+{% extends 'app/paper/base.html' %}
+{% block link %}
+    <li class="nav-item">
+       <a class="nav-link" href="{% url 'search' %}">Повернутись до пошуку</a>
+    </li>
+{% endblock %}
+{% block content %}
+    <h1>Пошуки не дали результатів. Спробуйте повторити з іншими даними!</h1>
+{% endblock %}
